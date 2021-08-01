@@ -9,8 +9,9 @@ public class Rover {
     private String direction;
     private int x;
     private int y;
+    private final Runnable callback;
     private boolean running = false;
-    private Queue<Character> buffer = new LinkedBlockingQueue<>();
+    private Queue<Character> queue = new LinkedBlockingQueue<>();
     private final HashMap<String, int[]> vectors = new HashMap<>(){{
         put("N", new int[]{0, 1});
         put("E", new int[]{1, 0});
@@ -18,10 +19,11 @@ public class Rover {
         put("W", new int[]{-1, 0});
     }};
 
-    public Rover(String direction, int x, int y) {
+    public Rover(String direction, int x, int y, Runnable callback) {
         this.direction = direction;
         this.x = x;
         this.y = y;
+        this.callback = callback;
     }
 
     public void run() {
@@ -35,8 +37,8 @@ public class Rover {
         }};
 
         while(running){
-            if(!buffer.isEmpty()){
-                Character instruction = buffer.remove();
+            if(!queue.isEmpty()){
+                Character instruction = queue.remove();
                 System.out.println("Instruction: " + instruction);
                 actions.get(instruction).run();
                 System.out.println(toString());
@@ -44,6 +46,9 @@ public class Rover {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                }
+                if(queue.isEmpty()){
+                    callback.run();
                 }
             }
         }
@@ -63,7 +68,7 @@ public class Rover {
 
         for (int i = 0; i < characters.length; i++) {
             char c = characters[i];
-            buffer.add(c);
+            queue.add(c);
         }
 
     }
@@ -82,8 +87,8 @@ public class Rover {
 
     private void move(int coefficient) {
         int[] vector = vectors.get(direction);
-        x += vector[0 * coefficient];
-        y += vector[1 * coefficient];
+        x += vector[0] * coefficient;
+        y += vector[1] * coefficient;
     }
 
     private void left() {
